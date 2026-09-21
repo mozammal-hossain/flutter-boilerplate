@@ -1,7 +1,9 @@
 # flutter_boilerplate
 
-A Clean Architecture Flutter starting point — feature-based, BLoC/Cubit
-state management, DI via `injectable`. One real feature (Home) is built
+A **Flutter Clean Architecture boilerplate/starter kit** — feature-based
+package structure, **BLoC/Cubit** state management, **GetIt + Injectable**
+dependency injection, **Dio + Retrofit** networking, **Hive CE** local
+storage, and **go_router** navigation. One real feature (Home) is built
 out end-to-end as a worked example; see
 [Known Limitations](#known-limitations) before treating this as
 production-ready as-is.

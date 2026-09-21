@@ -1,0 +1,43 @@
+# flutter_boilerplate
+
+> A Flutter Clean Architecture boilerplate/starter kit: feature-based
+> package structure (core/domain/data/app), BLoC/Cubit state management,
+> GetIt + Injectable dependency injection, Dio + Retrofit networking, and
+> Hive CE + SharedPreferences local storage. One real feature (Home) is
+> built out end-to-end across all layers as a worked example.
+
+Use this repo as a reference or starting point when scaffolding a new
+Flutter app that needs Clean Architecture layering, testable BLoC/Cubit
+state, and a monorepo split into `core`/`domain`/`data`/app packages.
+It intentionally documents its own gaps (no CI, single feature, partial
+test coverage) instead of overclaiming — read Known Limitations in
+README.md before treating it as production-ready as-is.
+
+Key stack: Flutter 3.41.8 (via FVM), Dart 3.11.5, bloc/flutter_bloc 9.x
+(Cubit pattern), go_router, dio + retrofit, hive_ce, get_it + injectable,
+freezed, json_serializable, equatable, mockito.
+
+## Docs
+
+- [README.md](./README.md): Project overview, architecture diagram, key
+  stack rationale, quick start, common patterns (Result<T> error
+  handling, Cubit state, DI composition), current test status, known
+  limitations, and troubleshooting.
+- [CLAUDE.md](./CLAUDE.md): Full feature-development guide — Clean
+  Architecture layer conventions (domain/data/presentation), the
+  Result<T> type, AppFailure hierarchy, DI registration and per-package
+  build_runner rebuild steps, testing patterns (mockito, Cubit tests),
+  and pitfalls already hit once (unregistered DI, circular package
+  dependencies).
+- [ERROR_BOUNDARY.md](./ERROR_BOUNDARY.md): How the app's error boundary
+  widget catches build-time errors without crashing itself, including a
+  bug found and fixed during testing.
+- [TESTING_IMPLEMENTATION.md](./TESTING_IMPLEMENTATION.md): What test
+  coverage actually exists today (use cases, entities, models) versus
+  what's still missing (Cubit, repository, widget tests).
+
+## Optional
+
+- [pubspec.yaml](./pubspec.yaml): Root package manifest and dependency
+  versions for the app package.
+- [LICENSE](./LICENSE): MIT license terms.

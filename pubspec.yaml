@@ -1,5 +1,5 @@
 name: flutter_boilerplate
-description: "A production-ready Flutter boilerplate with clean architecture."
+description: "Flutter Clean Architecture boilerplate with BLoC/Cubit, GetIt + Injectable DI, Dio/Retrofit networking, and Hive CE local storage."
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
