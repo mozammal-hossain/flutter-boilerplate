@@ -37,22 +37,19 @@ class ApiClient {
   /// Maximum number of retries for failed requests
   final int maxRetries;
 
-
   /// Configures Dio with interceptors and options
   void _setupDio() {
     _dio
       ..options = BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout: connectTimeout.inMilliseconds,
-        receiveTimeout: receiveTimeout.inMilliseconds,
+        connectTimeout: connectTimeout,
+        receiveTimeout: receiveTimeout,
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
       )
-      ..interceptors.add(
-        LoggingInterceptor(),
-      );
+      ..interceptors.add(LoggingInterceptor());
   }
 
   /// Adds authentication interceptor to the client
@@ -61,10 +58,7 @@ class ApiClient {
     Future<String?> Function()? refreshToken,
   }) {
     _dio.interceptors.add(
-      AuthInterceptor(
-        getToken: getToken,
-        refreshToken: refreshToken,
-      ),
+      AuthInterceptor(getToken: getToken, refreshToken: refreshToken),
     );
   }
 
@@ -273,8 +267,8 @@ class ApiClient {
     final response = (e as dynamic).response;
     final type = (e as dynamic).type;
     return typeName.contains('DioError') ||
-           typeName.contains('DioException') ||
-           (response != null || type != null);
+        typeName.contains('DioException') ||
+        (response != null || type != null);
   }
 
   /// Maps Dio error to AppFailure
@@ -342,10 +336,7 @@ class ApiClient {
     final stackTrace = (error as dynamic).stackTrace as StackTrace?;
 
     if (typeStr.contains('timeout')) {
-      return NetworkFailure(
-        message: 'Request timeout',
-        stackTrace: stackTrace,
-      );
+      return NetworkFailure(message: 'Request timeout', stackTrace: stackTrace);
     }
 
     // Handle request cancellation
@@ -360,17 +351,11 @@ class ApiClient {
     if (typeStr.contains('connection') ||
         typeStr.contains('connectionError') ||
         typeStr.contains('unknown')) {
-      return NetworkFailure(
-        message: 'Network error',
-        stackTrace: stackTrace,
-      );
+      return NetworkFailure(message: 'Network error', stackTrace: stackTrace);
     }
 
     // Default error
-    return NetworkFailure(
-      message: 'An error occurred',
-      stackTrace: stackTrace,
-    );
+    return NetworkFailure(message: 'An error occurred', stackTrace: stackTrace);
   }
 
   /// Returns the underlying Dio instance for advanced usage

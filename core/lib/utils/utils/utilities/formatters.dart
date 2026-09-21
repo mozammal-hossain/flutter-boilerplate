@@ -48,8 +48,7 @@ class Formatters {
         ? time.hour
         : (time.hour > 12 ? time.hour - 12 : time.hour);
     final minute = time.minute.toString().padLeft(2, '0');
-    final period =
-        use24HourFormat ? '' : (time.hour >= 12 ? ' PM' : ' AM');
+    final period = use24HourFormat ? '' : (time.hour >= 12 ? ' PM' : ' AM');
     return '$hour:$minute$period';
   }
 
@@ -61,15 +60,17 @@ class Formatters {
   /// Formats a number with commas as thousand separators
   static String formatNumber(num number, {int decimalPlaces = 0}) {
     if (decimalPlaces > 0) {
-      return number.toStringAsFixed(decimalPlaces).replaceAllMapped(
+      return number
+          .toStringAsFixed(decimalPlaces)
+          .replaceAllMapped(
             RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
             (match) => '${match.group(1)},',
           );
     }
     return number.toString().replaceAllMapped(
-          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-          (match) => '${match.group(1)},',
-        );
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (match) => '${match.group(1)},',
+    );
   }
 
   /// Formats currency (Indian Rupees)

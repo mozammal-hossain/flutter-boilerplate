@@ -15,9 +15,7 @@ extension StringExtensions on String {
   /// Converts the string to title case
   String get titleCase {
     if (isNullOrEmpty) return this;
-    return split(' ')
-        .map((word) => word.capitalize)
-        .join(' ');
+    return split(' ').map((word) => word.capitalize).join(' ');
   }
 
   /// Removes all whitespace from the string
@@ -32,9 +30,7 @@ extension StringExtensions on String {
   /// Validates if the string is a valid email
   bool get isValidEmail {
     if (isNullOrEmpty) return false;
-    final emailRegex = RegExp(
-      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-    );
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     return emailRegex.hasMatch(this);
   }
 
@@ -51,10 +47,12 @@ extension StringExtensions on String {
     final words = split(RegExp(r'[\s_\-]+'));
     return words
         .asMap()
-        .map((index, word) => MapEntry(
-              index,
-              index == 0 ? word.toLowerCase() : word.capitalize,
-            ))
+        .map(
+          (index, word) => MapEntry(
+            index,
+            index == 0 ? word.toLowerCase() : word.capitalize,
+          ),
+        )
         .values
         .join();
   }

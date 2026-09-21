@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Global navigation utility
-/// 
+///
 /// Provides helper methods for common navigation patterns
 /// and access to the current navigation state.
 class AppNavigator {
@@ -30,32 +30,28 @@ class AppNavigator {
     String routeName, {
     required bool Function(Route<dynamic>) predicate,
     Object? arguments,
-  }) =>
-      navigatorKey.currentState?.pushNamedAndRemoveUntil<T>(
-        routeName,
-        predicate,
-        arguments: arguments,
-      );
+  }) => navigatorKey.currentState?.pushNamedAndRemoveUntil<T>(
+    routeName,
+    predicate,
+    arguments: arguments,
+  );
 
   /// Push a named route and remove all previous routes until a specific route
   static Future<T?>? pushNamedAndRemoveUntilUntil<T extends Object?>(
     String newRouteName,
     String removeUntilRouteName, {
     Object? arguments,
-  }) =>
-      navigatorKey.currentState?.pushNamedAndRemoveUntil<T>(
-        newRouteName,
-        ModalRoute.withName(removeUntilRouteName),
-        arguments: arguments,
-      );
+  }) => navigatorKey.currentState?.pushNamedAndRemoveUntil<T>(
+    newRouteName,
+    ModalRoute.withName(removeUntilRouteName),
+    arguments: arguments,
+  );
 
   /// Replace the current route with a new route
-  static Future<T?>? pushReplacementNamed<T extends Object?,
-      TO extends Object?>(
-    String routeName, {
-    TO? result,
-    Object? arguments,
-  }) =>
+  static Future<T?>? pushReplacementNamed<
+    T extends Object?,
+    TO extends Object?
+  >(String routeName, {TO? result, Object? arguments}) =>
       navigatorKey.currentState?.pushReplacementNamed<T, TO>(
         routeName,
         result: result,
@@ -66,12 +62,11 @@ class AppNavigator {
   static Future<T?>? pushNamedAndRemoveAll<T extends Object?>(
     String routeName, {
     Object? arguments,
-  }) =>
-      pushNamedAndRemoveUntil<T>(
-        routeName,
-        arguments: arguments,
-        predicate: (_) => false,
-      );
+  }) => pushNamedAndRemoveUntil<T>(
+    routeName,
+    arguments: arguments,
+    predicate: (_) => false,
+  );
 
   /// Pop the top-most route off the navigator
   static void pop<T extends Object?>([T? result]) {
@@ -85,7 +80,6 @@ class AppNavigator {
 
   /// Pop until a specific route
   static void popUntil(String routeName) {
-    navigatorKey.currentState
-        ?.popUntil(ModalRoute.withName(routeName));
+    navigatorKey.currentState?.popUntil(ModalRoute.withName(routeName));
   }
 }

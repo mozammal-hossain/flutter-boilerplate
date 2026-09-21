@@ -67,36 +67,48 @@ class AppStrings {
   /// Generic labels
   /// Loading label
   static const String labelLoading = 'Loading...';
+
   /// Error label
   static const String labelError = 'Error';
+
   /// Retry label
   static const String labelRetry = 'Retry';
+
   /// Cancel label
   static const String labelCancel = 'Cancel';
+
   /// OK label
   static const String labelOk = 'OK';
+
   /// Save label
   static const String labelSave = 'Save';
+
   /// Delete label
   static const String labelDelete = 'Delete';
+
   /// Edit label
   static const String labelEdit = 'Edit';
+
   /// Submit label
   static const String labelSubmit = 'Submit';
 
   /// Empty states
   /// No data message
   static const String emptyNoData = 'No data available';
+
   /// No search results message
   static const String emptySearch = 'No results found';
+
   /// No favorites message
   static const String emptyFavorites = 'No favorites yet';
 
   /// Connectivity
   /// Connectivity status label
   static const String connectivityStatus = 'Connectivity status';
+
   /// Online status label
   static const String connectivityOnline = 'Online';
+
   /// Offline status label
   static const String connectivityOffline = 'Offline';
 }

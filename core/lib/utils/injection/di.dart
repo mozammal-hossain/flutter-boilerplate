@@ -2,7 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_boilerplate_core/utils/injection/di.config.dart';
 import 'package:get_it/get_it.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
+import 'package:injectable/injectable.dart';
 
 /// Global service locator instance
 final GetIt getIt = GetIt.instance;
@@ -13,6 +14,7 @@ final GetIt sl = getIt;
 /// Main entry point for configuring dependencies
 ///
 /// Call this function in `main()` before `runApp()`
+@InjectableInit()
 Future<void> configureDependencies([String? environment]) async {
   // Initialize Hive for local storage
   await Hive.initFlutter();
@@ -27,7 +29,7 @@ Future<void> resetDependencies() async {
 }
 
 /// Scope management helpers
-/// 
+///
 /// Use these to manage feature-specific dependency lifecycles
 extension DependencyScopeX on GetIt {
   /// Pushes a new scope for a feature
