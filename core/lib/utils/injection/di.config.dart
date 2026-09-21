@@ -19,8 +19,6 @@ import 'package:flutter_boilerplate_core/utils/network/api_client.dart'
     as _i961;
 import 'package:flutter_boilerplate_core/utils/storage/shared_prefs_impl.dart'
     as _i216;
-import 'package:flutter_boilerplate_data/feature_home/datasources/home_remote_datasource.dart'
-    as _i1015;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:hive_ce_flutter/hive_ce_flutter.dart' as _i965;
 import 'package:injectable/injectable.dart' as _i526;
@@ -57,12 +55,6 @@ extension GetItInjectableX on _i174.GetIt {
         connectTimeout: gh<Duration>(),
         receiveTimeout: gh<Duration>(),
         maxRetries: gh<int>(),
-      ),
-    );
-    gh.lazySingleton<_i1015.HomeRemoteDatasource>(
-      () => dIModule.getHomeRemoteDatasource(
-        gh<_i361.Dio>(),
-        gh<String>(instanceName: 'baseUrl'),
       ),
     );
     return this;

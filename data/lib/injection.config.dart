@@ -10,10 +10,12 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 
+import 'package:dio/dio.dart' as _i361;
 import 'package:flutter_boilerplate_data/feature_home/datasources/home_remote_datasource.dart'
     as _i1015;
 import 'package:flutter_boilerplate_data/feature_home/repositories/home_repository_impl.dart'
     as _i4;
+import 'package:flutter_boilerplate_data/injection.dart' as _i920;
 import 'package:flutter_boilerplate_domain/flutter_boilerplate_domain.dart'
     as _i855;
 import 'package:get_it/get_it.dart' as _i174;
@@ -27,6 +29,13 @@ extension GetItInjectableX on _i174.GetIt {
     _i526.EnvironmentFilter? environmentFilter,
   }) {
     final gh = _i526.GetItHelper(this, environment, environmentFilter);
+    final dataModule = _$DataModule();
+    gh.lazySingleton<_i1015.HomeRemoteDatasource>(
+      () => dataModule.getHomeRemoteDatasource(
+        gh<_i361.Dio>(),
+        gh<String>(instanceName: 'baseUrl'),
+      ),
+    );
     gh.lazySingleton<_i855.HomeRepository>(
       () => _i4.HomeRepositoryImpl(
         remoteDatasource: gh<_i1015.HomeRemoteDatasource>(),
@@ -36,3 +45,5 @@ extension GetItInjectableX on _i174.GetIt {
     return this;
   }
 }
+
+class _$DataModule extends _i920.DataModule {}

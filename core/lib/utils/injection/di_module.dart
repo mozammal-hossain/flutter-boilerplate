@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_boilerplate_core/flutter_boilerplate_core.dart';
-import 'package:flutter_boilerplate_data/feature_home/datasources/home_remote_datasource.dart';
 import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
@@ -37,11 +36,4 @@ abstract class DIModule {
   @preResolve
   @Named('home_cache')
   Future<Box<String>> get homeBox => Hive.openBox<String>('home_cache');
-
-  /// Home remote datasource
-  @lazySingleton
-  HomeRemoteDatasource getHomeRemoteDatasource(
-    Dio dio,
-    @Named('baseUrl') String baseUrl,
-  ) => HomeRemoteDatasource(dio, baseUrl: baseUrl);
 }
