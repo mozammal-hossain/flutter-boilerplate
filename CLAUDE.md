@@ -659,12 +659,15 @@ This project pins Flutter to **3.41.8** in `.fvmrc`. Commands like `fvm flutter`
 
 ### Avoid These Patterns
 - ❌ Accessing data layer directly from UI
-- ❌ Circular dependencies between packages — **currently violated**:
-  `core/pubspec.yaml` path-depends on `data` and `domain`, which both
-  path-depend back on `core`. It resolves today only because no file
-  actually imports in a cycle; don't add a new one that does, and prefer
-  fixing this (e.g. move `core`'s feature-specific DI wiring for
-  `HomeRemoteDatasource` out of `DIModule`) over extending it.
+- ❌ Circular dependencies between packages. `core` used to path-depend on
+  `data` and `domain` (which both path-depend on `core`), purely because
+  `core`'s `DIModule` had a feature-specific `HomeRemoteDatasource`
+  factory method. Fixed: that registration now lives in a `DataModule` in
+  `data/lib/injection.dart`, and `core/pubspec.yaml` has no path
+  dependency on `data`/`domain` at all. The dependency graph is now a
+  proper DAG: `domain → core`, `data → domain, core`, `core → (nothing)`.
+  Keep it that way — `core` should never need a feature's data source or
+  repository, no matter how convenient it seems for a quick DI wire-up.
 - ❌ Using `BuildContext` across `await` boundaries
 - ❌ Mutable state in entities/models
 - ❌ Exception-based error handling in domain layer (use `Result<T>`)
