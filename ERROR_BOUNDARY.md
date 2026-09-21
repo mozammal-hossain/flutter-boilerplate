@@ -1,6 +1,11 @@
 # Error Boundary Implementation
 
-Comprehensive error handling for the Flutter app using error boundaries, error screens, and error handlers.
+Error handling for the Flutter app using an error boundary, a fallback
+screen, and dialog/snackbar helpers.
+
+**Three real bugs in this code were found and fixed** while writing an
+actual test for it (`test/core/error_boundary/error_boundary_test.dart`)
+— see "Bugs Found & Fixed" below before assuming this was already solid.
 
 ## Files Created
 
@@ -68,12 +73,16 @@ BlocListener<MyCubit, MyState>(
 
 ## Error Types
 
-App uses custom failure types from `flutter_boilerplate_core`:
+App uses the `AppFailure` hierarchy from `core/lib/utils/failure/app_failure.dart`
+(`abstract class AppFailure implements Exception`):
 - `NetworkFailure` — HTTP/connection errors
 - `CacheFailure` — Local storage errors
 - `ValidationFailure` — Input validation
+- `AuthFailure` — Auth/authorization errors
 - `UnknownFailure` — Unexpected errors
-- `ServerFailure` — Server-side errors
+
+There is no `ServerFailure` class, despite what an earlier version of this
+doc (and `CLAUDE.md`) claimed.
 
 ## Flow
 
@@ -81,20 +90,49 @@ App uses custom failure types from `flutter_boilerplate_core`:
 2. **Expected Error** → Cubit emits error state → Page shows dialog/snackbar
 3. **Retry** → User taps retry → Reset error state → Re-fetch data
 
+## Bugs Found & Fixed
+
+Writing a real widget test (`_ThrowingWidget` that throws during `build()`,
+wrapped the same way `main.dart` wraps the real app) surfaced three
+compounding bugs, each hidden behind the previous one:
+
+1. **`setState()` called during build.** `FlutterError.onError` can fire
+   synchronously while a descendant is still mid-build. Calling
+   `setState()` on the ancestor `ErrorBoundary` at that exact moment
+   crashed with `setState() ... called during build`. Fixed by deferring
+   via `WidgetsBinding.instance.addPostFrameCallback`.
+2. **Global handler clobbering.** `ErrorBoundary` unconditionally
+   overwrote `FlutterError.onError` in `initState()` and hardcoded
+   `FlutterError.dumpErrorToConsole` in `dispose()`, discarding whatever
+   handler was already installed — including the Flutter test framework's
+   own, which broke every widget test that wrapped anything in
+   `ErrorBoundary`. Fixed by saving and chaining to the previous handler.
+3. **The fallback screen itself crashed.** `ErrorBoundary` sits above
+   `MaterialApp` in `main.dart` (so it can catch errors from the app's own
+   setup, e.g. router config). Once it swaps in `ErrorScreen` — which uses
+   `Scaffold`/`AppBar`/`Theme.of(context)` — there's no `MaterialApp`
+   ancestor left to provide `Directionality`/`Material`/`Navigator`, so it
+   crashed with "No Directionality widget found." Fixed by wrapping the
+   fallback in its own self-contained `MaterialApp`.
+
+All three are covered by `test/core/error_boundary/error_boundary_test.dart`.
+
 ## Testing
 
-Error boundary catches:
-- Null reference exceptions
-- Type errors
-- Async errors
-- Widget build errors
-
-Test by:
-```dart
-// In a test/widget
-throw Exception('Test error');
-// Should see ErrorScreen
+```bash
+fvm flutter test test/core/error_boundary/error_boundary_test.dart
 ```
+
+The test wraps a widget that throws during `build()` the same way
+`main.dart` composes the real app (`ErrorBoundary` → `ScreenUtilInit` →
+`MaterialApp`) — a bare `MaterialApp(home: ErrorBoundary(...))` doesn't
+reproduce the tree-position bug above.
+
+## Known gap
+
+`ErrorScreen` shows the stack trace unconditionally — there's no
+`kDebugMode`/`kReleaseMode` gating despite that being listed as a "best
+practice" below. Decide whether that's intentional before shipping.
 
 ## Best Practices
 
@@ -102,7 +140,8 @@ throw Exception('Test error');
 ✅ Show user-friendly messages via ErrorHandler
 ✅ Log errors for debugging
 ✅ Provide retry mechanism
-✅ Don't show stack traces to users (dev only)
+⚠️ Don't show stack traces to users in release builds — **not currently
+   enforced**, see "Known gap" above
 
 ❌ Don't hide errors silently
 ❌ Don't show raw exception messages
