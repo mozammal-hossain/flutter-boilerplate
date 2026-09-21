@@ -17,6 +17,5 @@ class GetHomeDetailUseCase {
   /// Execute the use case
   ///
   /// [id] - Unique identifier for the item
-  Future<Result<HomeEntity>> call(String id) =>
-      _repository.getHomeDetail(id);
+  Future<Result<HomeEntity>> call(String id) => _repository.getHomeDetail(id);
 }

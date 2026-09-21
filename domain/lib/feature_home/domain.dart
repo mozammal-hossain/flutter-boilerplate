@@ -1,5 +1,5 @@
 /// Domain layer for Home feature
-/// 
+///
 /// Contains business logic entities, use cases, and repository interfaces.
 /// This layer is independent of any framework or implementation details.
 library home_domain;
