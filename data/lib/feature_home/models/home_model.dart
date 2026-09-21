@@ -3,14 +3,15 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'home_model.freezed.dart';
 part 'home_model.g.dart';
+
 /// Data model for home items
-/// 
+///
 /// This is the data layer representation of a home item.
 /// Used for JSON serialization/deserialization.
 @freezed
-class HomeItemModel with _$HomeItemModel {
+abstract class HomeItemModel with _$HomeItemModel {
   /// Creates an instance of [HomeItemModel]
-  /// 
+  ///
   /// [id] - unique identifier for the item
   /// [title] - display title
   /// [description] - optional description
@@ -27,20 +28,20 @@ class HomeItemModel with _$HomeItemModel {
     String? category,
     @Default(false) bool isFeatured,
   }) = _HomeItemModel;
-  
+
   /// Creates a [HomeItemModel] from JSON map
   factory HomeItemModel.fromJson(Map<String, dynamic> json) =>
       _$HomeItemModelFromJson(json);
 }
 
 /// Data model for home entity
-/// 
+///
 /// This is the data layer representation of home data.
 /// Used for network responses and local storage.
 @freezed
-class HomeModel with _$HomeModel {
+abstract class HomeModel with _$HomeModel {
   /// Creates an instance of [HomeModel]
-  /// 
+  ///
   /// [id] - unique identifier for the home data
   /// [title] - display title
   /// [subtitle] - optional subtitle
@@ -59,7 +60,7 @@ class HomeModel with _$HomeModel {
     String? imageUrl,
     @Default(false) bool isCached,
   }) = _HomeModel;
-  
+
   /// Creates a [HomeModel] from JSON map
   factory HomeModel.fromJson(Map<String, dynamic> json) =>
       _$HomeModelFromJson(json);
@@ -67,9 +68,9 @@ class HomeModel with _$HomeModel {
 
 /// Data model for home detail - extends HomeModel with additional fields
 @freezed
-class HomeDetailModel with _$HomeDetailModel {
+abstract class HomeDetailModel with _$HomeDetailModel {
   /// Creates an instance of [HomeDetailModel]
-  /// 
+  ///
   /// [description] - optional detailed description
   /// [metadata] - optional additional metadata
   const factory HomeDetailModel({
@@ -84,7 +85,7 @@ class HomeDetailModel with _$HomeDetailModel {
     String? description,
     Map<String, dynamic>? metadata,
   }) = _HomeDetailModel;
-  
+
   /// Creates a [HomeDetailModel] from JSON map
   factory HomeDetailModel.fromJson(Map<String, dynamic> json) =>
       _$HomeDetailModelFromJson(json);
