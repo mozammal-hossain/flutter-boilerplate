@@ -75,7 +75,7 @@ Each package is independently versionable and testable:
 
 ### Dart Style & Conventions
 - Follow [Effective Dart](https://dart.dev/guides/language/effective-dart)
-- Use `dart format` via FVM: `fvm flutter format .`
+- Use `dart format` via FVM: `fvm dart format .`
 - Max line length: 80 characters (enforced by analysis_options.yaml)
 - Use meaningful variable/function names
 
@@ -189,7 +189,7 @@ Follow conventional commits:
 
 ### Before Committing
 ```bash
-fvm flutter format .
+fvm dart format .
 fvm flutter analyze
 fvm flutter test
 ```
@@ -310,7 +310,7 @@ fvm flutter analyze
 
 | Task | Command |
 |------|---------|
-| Format code | `fvm flutter format .` |
+| Format code | `fvm dart format .` |
 | Analyze | `fvm flutter analyze` |
 | Get packages | `fvm flutter pub get` |
 | Run tests | `fvm flutter test` |

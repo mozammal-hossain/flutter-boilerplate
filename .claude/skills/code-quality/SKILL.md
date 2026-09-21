@@ -21,7 +21,7 @@ Ask the agent to:
 ### 1. Format Code
 Ensures consistent code style using Dart formatter:
 ```bash
-fvm flutter format .
+fvm dart format .
 ```
 
 ### 2. Analyze
@@ -61,7 +61,7 @@ Coverage files generated in `coverage/`
 
 Before committing, run in order:
 
-1. **Format**: `fvm flutter format .`
+1. **Format**: `fvm dart format .`
 2. **Analyze**: `fvm flutter analyze` (must have zero issues)
 3. **Test**: `fvm flutter test` (all tests must pass)
 4. **Commit**: `git commit -m "feat: description"`
@@ -80,7 +80,7 @@ In GitHub Actions, these checks run automatically:
 |-------|-----|
 | Analysis errors | `fvm flutter pub get && fvm flutter analyze` |
 | Test failures | Run `fvm flutter test` to see detailed output |
-| Format conflicts | `fvm flutter format .` to auto-fix |
+| Format conflicts | `fvm dart format .` to auto-fix |
 | Coverage too low | Write tests in `test/` or package `test/` dirs |
 | Outdated dependencies | `fvm flutter pub upgrade` |
 

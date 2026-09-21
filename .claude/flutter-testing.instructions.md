@@ -28,146 +28,132 @@ lib/features/my_feature/test/   # Feature-specific tests
 2. **Data Tests** (models, repositories, data sources) - Mock APIs
 3. **Presentation Tests** (BLoCs, widgets) - Mock domain & data
 
+## Mocking Convention: mockito, not mocktail
+
+This project uses **`mockito`** with `@GenerateMocks` (code-generated via
+`build_runner`) throughout — see any file in
+`test/features/home/domain/usecases/` for the real pattern. It does **not**
+use `mocktail`, and there is no `Either`/`Right`/`Left` (dartz) anywhere —
+domain/data layers return `Result<T>` = `(T?, AppFailure?)`, a plain
+record, from `core/lib/utils/network/result.dart`. The mockito/mocktail
+API difference that matters most: mockito's `when(...)`/`verify(...)`
+take the call directly, not wrapped in a closure (`when(() => ...)` is
+mocktail's syntax).
+
 ## Unit Tests
 
 ### Testing Use Cases
 ```dart
 // domain/usecases/my_usecase_test.dart
+@GenerateMocks([MyRepository])
 void main() {
-  group('MyUseCase', () {
-    late MockMyRepository mockRepository;
-    late MyUseCase useCase;
-    
-    setUp(() {
-      mockRepository = MockMyRepository();
-      useCase = MyUseCase(mockRepository);
-    });
-    
-    test('should get data from repository', () async {
-      // Arrange
-      final tData = TestData.myEntity;
-      when(() => mockRepository.getData())
-          .thenAnswer((_) async => Right(tData));
-      
-      // Act
-      final result = await useCase(NoParams());
-      
-      // Assert
-      expect(result, Right(tData));
-      verify(() => mockRepository.getData()).called(1);
-      verifyNoMoreInteractions(mockRepository);
-    });
-    
-    test('should return failure when repository fails', () async {
-      // Arrange
-      final tFailure = ServerFailure();
-      when(() => mockRepository.getData())
-          .thenAnswer((_) async => Left(tFailure));
-      
-      // Act
-      final result = await useCase(NoParams());
-      
-      // Assert
-      expect(result, Left(tFailure));
-    });
+  late MockMyRepository mockRepository;
+  late GetMyDataUseCase useCase;
+
+  setUp(() {
+    mockRepository = MockMyRepository();
+    useCase = GetMyDataUseCase(mockRepository);
+  });
+
+  test('should get data from repository', () async {
+    final tData = TestData.myEntity;
+    when(mockRepository.getData()).thenAnswer((_) async => (tData, null));
+
+    final (data, error) = await useCase();
+
+    expect(data, tData);
+    expect(error, isNull);
+    verify(mockRepository.getData()).called(1);
+    verifyNoMoreInteractions(mockRepository);
+  });
+
+  test('should return failure when repository fails', () async {
+    const tFailure = NetworkFailure(message: 'Server error');
+    when(mockRepository.getData()).thenAnswer((_) async => (null, tFailure));
+
+    final (data, error) = await useCase();
+
+    expect(data, isNull);
+    expect(error, tFailure);
   });
 }
 ```
+Run `fvm flutter pub run build_runner build` after adding/changing
+`@GenerateMocks` to produce the matching `*_test.mocks.dart` file.
 
 ### Testing Repositories
 ```dart
 // data/repositories/my_repository_impl_test.dart
+@GenerateMocks([MyRemoteDataSource])
 void main() {
-  group('MyRepositoryImpl', () {
-    late MockMyRemoteDataSource mockRemoteDataSource;
-    late MyRepositoryImpl repository;
-    
-    setUp(() {
-      mockRemoteDataSource = MockMyRemoteDataSource();
-      repository = MyRepositoryImpl(remoteDatasource: mockRemoteDataSource);
+  late MockMyRemoteDataSource mockRemoteDataSource;
+  late MyRepositoryImpl repository;
+
+  setUp(() {
+    mockRemoteDataSource = MockMyRemoteDataSource();
+    repository = MyRepositoryImpl(remoteDatasource: mockRemoteDataSource);
+  });
+
+  group('getData', () {
+    test('should return remote data', () async {
+      const tModel = MyModel(id: '1', name: 'Test');
+      when(mockRemoteDataSource.getData())
+          .thenAnswer((_) async => [tModel]);
+
+      final (data, error) = await repository.getData();
+
+      expect(data, [tModel]);
+      expect(error, isNull);
     });
-    
-    group('getData', () {
-      test('should return remote data', () async {
-        // Arrange
-        final tModel = const MyModel(id: '1', name: 'Test');
-        when(() => mockRemoteDataSource.getData())
-            .thenAnswer((_) async => [tModel]);
-        
-        // Act
-        final result = await repository.getData();
-        
-        // Assert
-        expect(result, Right([tModel]));
-      });
-      
-      test('should return failure on exception', () async {
-        // Arrange
-        when(() => mockRemoteDataSource.getData())
-            .thenThrow(SocketException('Network error'));
-        
-        // Act
-        final result = await repository.getData();
-        
-        // Assert
-        expect(result, isA<Left>());
-      });
+
+    test('should return failure on exception', () async {
+      when(mockRemoteDataSource.getData())
+          .thenThrow(const SocketException('Network error'));
+
+      final (data, error) = await repository.getData();
+
+      expect(data, isNull);
+      expect(error, isNotNull);
     });
   });
 }
 ```
 
-## BLoC Tests
+## Cubit Tests
 
-### Using bloc_test Package
+`bloc_test` is **not currently a dependency** in this project (it was
+dropped early on for a `bloc` 7.x conflict; `bloc` is on 9.x now, so
+adding it is unblocked if you want the `blocTest<>()` helper). Without it,
+drive the Cubit directly and assert on its `.stream`:
 ```dart
-// presentation/bloc/my_bloc_test.dart
+// presentation/cubit/my_cubit_test.dart
+@GenerateMocks([GetMyDataUseCase])
 void main() {
-  group('MyBloc', () {
-    late MockGetMyDataUseCase mockGetMyDataUseCase;
-    late MyBloc myBloc;
-    
-    setUp(() {
-      mockGetMyDataUseCase = MockGetMyDataUseCase();
-      myBloc = MyBloc(getMyDataUseCase: mockGetMyDataUseCase);
-    });
-    
-    tearDown(() {
-      myBloc.close();
-    });
-    
-    test('initial state is MyInitial', () {
-      expect(myBloc.state, MyInitial());
-    });
-    
-    blocTest<MyBloc, MyState>(
-      'emits [Loading, Success] when LoadEvent succeeds',
-      build: () {
-        final tData = [TestData.myEntity];
-        when(() => mockGetMyDataUseCase(any()))
-            .thenAnswer((_) async => Right(tData));
-        return myBloc;
-      },
-      act: (bloc) => bloc.add(const LoadMyDataEvent()),
-      expect: () => [
-        const MyLoading(),
-        MySuccess(TestData.myDataList),
-      ],
-    );
-    
-    blocTest<MyBloc, MyState>(
-      'emits [Loading, Failure] when LoadEvent fails',
-      build: () {
-        when(() => mockGetMyDataUseCase(any()))
-            .thenAnswer((_) async => Left(ServerFailure()));
-        return myBloc;
-      },
-      act: (bloc) => bloc.add(const LoadMyDataEvent()),
-      expect: () => [
-        const MyLoading(),
-        const MyFailure('Server error'),
-      ],
-    );
+  late MockGetMyDataUseCase mockGetMyDataUseCase;
+  late MyCubit myCubit;
+
+  setUp(() {
+    mockGetMyDataUseCase = MockGetMyDataUseCase();
+    myCubit = MyCubit(getMyDataUseCase: mockGetMyDataUseCase);
+  });
+
+  tearDown(() => myCubit.close());
+
+  test('initial state is MyInitial', () {
+    expect(myCubit.state, const MyInitial());
+  });
+
+  test('emits [loading, loaded] when fetchData succeeds', () async {
+    final tData = [TestData.myEntity];
+    when(mockGetMyDataUseCase())
+        .thenAnswer((_) async => (tData, null));
+
+    final states = <MyState>[];
+    final sub = myCubit.stream.listen(states.add);
+    await myCubit.fetchData();
+    await sub.cancel();
+
+    expect(states, [const MyLoading(), MyLoaded(data: tData)]);
   });
 }
 ```
@@ -177,103 +163,49 @@ void main() {
 ### Testing Pages/Widgets
 ```dart
 // presentation/pages/my_page_test.dart
+@GenerateMocks([MyCubit])
 void main() {
-  group('MyPage', () {
-    late MockMyBloc mockMyBloc;
-    
-    setUp(() {
-      mockMyBloc = MockMyBloc();
-    });
-    
-    testWidgets('displays loading indicator', (WidgetTester tester) async {
-      // Arrange
-      when(() => mockMyBloc.state).thenReturn(const MyLoading());
-      
-      // Act
-      await tester.pumpWidget(
-        MaterialApp(
-          home: BlocProvider<MyBloc>.value(
-            value: mockMyBloc,
-            child: const MyPage(),
-          ),
+  late MockMyCubit mockMyCubit;
+
+  setUp(() {
+    mockMyCubit = MockMyCubit();
+  });
+
+  testWidgets('displays loading indicator', (WidgetTester tester) async {
+    when(mockMyCubit.state).thenReturn(const MyLoading());
+    when(mockMyCubit.stream)
+        .thenAnswer((_) => Stream.value(const MyLoading()));
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BlocProvider<MyCubit>.value(
+          value: mockMyCubit,
+          child: const MyPage(),
         ),
-      );
-      
-      // Assert
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    });
-    
-    testWidgets('displays data when state is Success',
-        (WidgetTester tester) async {
-      // Arrange
-      final tData = [TestData.myEntity];
-      when(() => mockMyBloc.state).thenReturn(MySuccess(tData));
-      
-      // Act
-      await tester.pumpWidget(
-        MaterialApp(
-          home: BlocProvider<MyBloc>.value(
-            value: mockMyBloc,
-            child: const MyPage(),
-          ),
-        ),
-      );
-      
-      // Assert
-      expect(find.byType(ListView), findsOneWidget);
-      expect(find.text('Test'), findsOneWidget);
-    });
+      ),
+    );
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
   });
 }
 ```
+Note: mocking a `Cubit`/`Bloc` with `mockito` needs its `.stream` stubbed
+too (`BlocBuilder` subscribes to it), not just `.state` — that's easy to
+forget and get a widget test that silently never rebuilds.
 
 ## Test Data & Fixtures
 
-Create reusable test data:
+Create reusable test data (see the real, if currently unused,
+`test/utils/test_utils.dart` for the pattern already in this repo):
 
 ```dart
-// test/utils/test_utils.dart
 class TestData {
-  static const myEntity = MyEntity(
-    id: '1',
-    name: 'Test Name',
-  );
-  
-  static const myModel = MyModel(
-    id: '1',
-    name: 'Test Name',
-  );
-  
+  static const myEntity = MyEntity(id: '1', name: 'Test Name');
+  static const myModel = MyModel(id: '1', name: 'Test Name');
   static final myDataList = [myEntity, myEntity];
-  
-  static Map<String, dynamic> myJson() => {
-    'id': '1',
-    'name': 'Test Name',
-  };
+
+  static Map<String, dynamic> myJson() => {'id': '1', 'name': 'Test Name'};
 }
-```
-
-## Mocking with Mocktail
-
-### Create Mocks
-```dart
-// Create file: test/mocks/mock_repositories.dart
-class MockMyRepository extends Mock implements MyRepository {}
-class MockMyUseCase extends Mock implements MyUseCase {}
-class MockMyBloc extends Mock implements MyBloc {}
-
-// Auto-generate (recommended)
-// Use mockito or mocktail with build_runner
-```
-
-### Mock Setup
-```dart
-setUp(() {
-  mockRepo = MockMyRepository();
-  // Stub methods
-  when(() => mockRepo.getData())
-      .thenAnswer((_) async => Right(data));
-});
 ```
 
 ## Testing Best Practices
@@ -362,10 +294,8 @@ expect(widget, findsOneWidget);
 
 ## Continuous Integration
 
-Tests run automatically on:
-- Pull requests
-- Main branch commits
-- Scheduled daily runs
-
-Check status in GitHub Actions.
+**There is no CI configured** — no `.github/workflows` directory exists.
+Tests only run when someone runs `fvm flutter test` locally. See
+`README.md`'s Advanced Patterns section for a starting GitHub Actions
+workflow if you want to add one.
 

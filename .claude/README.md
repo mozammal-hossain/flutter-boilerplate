@@ -59,7 +59,7 @@ Skills are on-demand workflows triggered by specific requests. Ask the Copilot a
 - **Location**: [skills/code-quality/SKILL.md](skills/code-quality/SKILL.md)
 - **Usage**: "Run all tests", "Format and analyze the code"
 - **What it does**:
-  - Formats code using `fvm flutter format`
+  - Formats code using `fvm dart format`
   - Runs static analysis with `fvm flutter analyze`
   - Executes all tests
   - Generates coverage reports
@@ -83,7 +83,7 @@ Skills are on-demand workflows triggered by specific requests. Ask the Copilot a
 ### Essential Commands (Always use FVM)
 ```bash
 # Format code
-fvm flutter format .
+fvm dart format .
 
 # Analyze for issues
 fvm flutter analyze
@@ -113,7 +113,7 @@ fvm flutter build web --release
 
 ### Before Committing
 ```bash
-fvm flutter format .
+fvm dart format .
 fvm flutter analyze
 fvm flutter test
 git add .
