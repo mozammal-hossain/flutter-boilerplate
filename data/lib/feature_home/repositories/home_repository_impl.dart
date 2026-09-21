@@ -6,7 +6,7 @@ import 'package:flutter_boilerplate_core/flutter_boilerplate_core.dart';
 import 'package:flutter_boilerplate_data/feature_home/datasources/home_remote_datasource.dart';
 import 'package:flutter_boilerplate_data/feature_home/models/home_model.dart';
 import 'package:flutter_boilerplate_domain/flutter_boilerplate_domain.dart';
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive_ce.dart';
 import 'package:injectable/injectable.dart';
 
 /// Implementation of [HomeRepository]
@@ -57,7 +57,7 @@ class HomeRepositoryImpl implements HomeRepository {
       await _cacheBox.put(_cacheKey, jsonEncode(homeModel.toJson()));
 
       return (homeModel.toEntity(), null);
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       // Try to return cached data on network failure
       final cachedJson = _cacheBox.get(_cacheKey);
       if (cachedJson != null) {
@@ -69,7 +69,7 @@ class HomeRepositoryImpl implements HomeRepository {
       return (
         null,
         NetworkFailure(
-          message: e.message,
+          message: e.message ?? 'Network error',
           statusCode: e.response?.statusCode,
           responseBody: e.response?.toString(),
         ),
@@ -104,7 +104,7 @@ class HomeRepositoryImpl implements HomeRepository {
       await _cacheBox.put('home_detail_$id', jsonEncode(homeModel.toJson()));
 
       return (homeModel.toEntity(), null);
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       // Try cached data
       final cachedJson = _cacheBox.get('home_detail_$id');
       if (cachedJson != null) {
@@ -116,7 +116,7 @@ class HomeRepositoryImpl implements HomeRepository {
       return (
         null,
         NetworkFailure(
-          message: e.message,
+          message: e.message ?? 'Network error',
           statusCode: e.response?.statusCode,
           responseBody: e.response?.toString(),
         ),

@@ -1,5 +1,5 @@
 /// Data layer for Home feature
-/// 
+///
 /// Contains data sources, models, and repository implementations.
 library home_data;
 

@@ -6,78 +6,78 @@ part of 'home_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$_HomeItemModel _$$_HomeItemModelFromJson(Map<String, dynamic> json) =>
-    _$_HomeItemModel(
+_HomeItemModel _$HomeItemModelFromJson(Map<String, dynamic> json) =>
+    _HomeItemModel(
       id: json['id'] as String,
       title: json['title'] as String,
+      rank: (json['rank'] as num).toInt(),
       description: json['description'] as String?,
       thumbnailUrl: json['thumbnailUrl'] as String?,
       category: json['category'] as String?,
-      rank: json['rank'] as int,
       isFeatured: json['isFeatured'] as bool? ?? false,
     );
 
-Map<String, dynamic> _$$_HomeItemModelToJson(_$_HomeItemModel instance) =>
+Map<String, dynamic> _$HomeItemModelToJson(_HomeItemModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
+      'rank': instance.rank,
       'description': instance.description,
       'thumbnailUrl': instance.thumbnailUrl,
       'category': instance.category,
-      'rank': instance.rank,
       'isFeatured': instance.isFeatured,
     };
 
-_$_HomeModel _$$_HomeModelFromJson(Map<String, dynamic> json) => _$_HomeModel(
-      id: json['id'] as String,
-      title: json['title'] as String,
-      subtitle: json['subtitle'] as String?,
-      imageUrl: json['imageUrl'] as String?,
-      items: (json['items'] as List<dynamic>)
-          .map((e) => HomeItemModel.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      totalCount: json['totalCount'] as int,
-      lastUpdated: json['lastUpdated'] as String,
-      isCached: json['isCached'] as bool? ?? false,
-    );
+_HomeModel _$HomeModelFromJson(Map<String, dynamic> json) => _HomeModel(
+  id: json['id'] as String,
+  title: json['title'] as String,
+  items: (json['items'] as List<dynamic>)
+      .map((e) => HomeItemModel.fromJson(e as Map<String, dynamic>))
+      .toList(),
+  totalCount: (json['totalCount'] as num).toInt(),
+  lastUpdated: json['lastUpdated'] as String,
+  subtitle: json['subtitle'] as String?,
+  imageUrl: json['imageUrl'] as String?,
+  isCached: json['isCached'] as bool? ?? false,
+);
 
-Map<String, dynamic> _$$_HomeModelToJson(_$_HomeModel instance) =>
+Map<String, dynamic> _$HomeModelToJson(_HomeModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
-      'subtitle': instance.subtitle,
-      'imageUrl': instance.imageUrl,
       'items': instance.items,
       'totalCount': instance.totalCount,
       'lastUpdated': instance.lastUpdated,
+      'subtitle': instance.subtitle,
+      'imageUrl': instance.imageUrl,
       'isCached': instance.isCached,
     };
 
-_$_HomeDetailModel _$$_HomeDetailModelFromJson(Map<String, dynamic> json) =>
-    _$_HomeDetailModel(
+_HomeDetailModel _$HomeDetailModelFromJson(Map<String, dynamic> json) =>
+    _HomeDetailModel(
       id: json['id'] as String,
       title: json['title'] as String,
-      subtitle: json['subtitle'] as String?,
-      imageUrl: json['imageUrl'] as String?,
       items: (json['items'] as List<dynamic>)
           .map((e) => HomeItemModel.fromJson(e as Map<String, dynamic>))
           .toList(),
-      totalCount: json['totalCount'] as int,
+      totalCount: (json['totalCount'] as num).toInt(),
       lastUpdated: json['lastUpdated'] as String,
+      subtitle: json['subtitle'] as String?,
+      imageUrl: json['imageUrl'] as String?,
       isCached: json['isCached'] as bool? ?? false,
       description: json['description'] as String?,
       metadata: json['metadata'] as Map<String, dynamic>?,
     );
 
-Map<String, dynamic> _$$_HomeDetailModelToJson(_$_HomeDetailModel instance) =>
+Map<String, dynamic> _$HomeDetailModelToJson(_HomeDetailModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
-      'subtitle': instance.subtitle,
-      'imageUrl': instance.imageUrl,
       'items': instance.items,
       'totalCount': instance.totalCount,
       'lastUpdated': instance.lastUpdated,
+      'subtitle': instance.subtitle,
+      'imageUrl': instance.imageUrl,
       'isCached': instance.isCached,
       'description': instance.description,
       'metadata': instance.metadata,
