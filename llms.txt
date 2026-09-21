@@ -19,6 +19,9 @@ freezed, json_serializable, equatable, mockito.
 
 ## Docs
 
+- [AGENTS.md](./AGENTS.md): Tool-agnostic instructions for AI coding
+  agents — setup commands, architecture rules, and the pre-completion
+  check sequence.
 - [README.md](./README.md): Project overview, architecture diagram, key
   stack rationale, quick start, common patterns (Result<T> error
   handling, Cubit state, DI composition), current test status, known
