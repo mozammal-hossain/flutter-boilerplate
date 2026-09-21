@@ -1,30 +1,33 @@
 # flutter_boilerplate
 
-Production-ready Flutter app template. Clean Architecture, BLoC state management, feature-based structure. Start building without architecture bikeshedding.
+A Clean Architecture Flutter starting point — feature-based, BLoC/Cubit
+state management, DI via `injectable`. One real feature (Home) is built
+out end-to-end as a worked example; see
+[Known Limitations](#known-limitations) before treating this as
+production-ready as-is.
 
 ## Why Use This?
 
 **Problem:** Most Flutter projects grow messy. Business logic bleeds into UI, navigation breaks, testing becomes impossible, code reuse fails.
 
-**Solution:** This boilerplate enforces Clean Architecture from day one:
-- **Feature isolation** — Each feature is independent (domain/data/presentation)
+**Solution:** This boilerplate demonstrates Clean Architecture layer
+separation, built out for one real feature (Home):
+- **Feature isolation** — Each feature spans domain/data/presentation packages
 - **Testable** — Business logic decoupled from UI, mockable dependencies
-- **Scalable** — Add features without touching existing code
-- **Type-safe** — Sealed classes, exhaustive checks, zero casting
-- **Production patterns** — Handled: auth guards, error boundaries, caching, offline support
-
-**Result:** 50+ hours saved on architecture decisions. Focus on features, not structure.
+- **Type-safe** — `@freezed` union states, exhaustive `.when()` matching
+- **Some production patterns wired up** — error boundary, caching, app
+  flavors. Not yet: auth guards, CI (see [Known Limitations](#known-limitations))
 
 ## Key Stack
 
 | Layer | Tool | Why |
 |-------|------|-----|
-| **State** | BLoC 7.x / Cubit | Reactive, testable, scales to complex flows |
-| **Nav** | go_router | Type-safe, auth guards, deep linking ready |
-| **Network** | Dio + Retrofit | Interceptors, retry logic, clean APIs |
-| **Storage** | Hive + SharedPrefs | Local caching, zero boilerplate |
-| **DI** | GetIt + Injectable | Auto-wired, no manual registration hell |
-| **Patterns** | Sealed classes, `Either<Failure, T>` | Type-safe error handling |
+| **State** | BLoC 9.x (Cubit, not Bloc+events, for the real feature) | Reactive, testable |
+| **Nav** | go_router | Type-safe, deep-linking-ready (auth guard params exist but aren't wired to a redirect yet) |
+| **Network** | Dio + Retrofit | Interceptors, clean APIs |
+| **Storage** | Hive CE + SharedPrefs | Local caching (`hive_ce`, the maintained fork of the abandoned `hive` package) |
+| **DI** | GetIt + Injectable | Each package (`core`/`domain`/`data`/app) generates its own DI config; see [CLAUDE.md](./CLAUDE.md#4-dependency-injection-setup) for how they're composed |
+| **Patterns** | `@freezed` states, `Result<T>` (a `(T?, AppFailure?)` record — **not** `Either`/dartz) | Type-safe error handling |
 
 ## Quick Start
 
@@ -62,7 +65,7 @@ See [CLAUDE.md](./CLAUDE.md) for full patterns (entity → repository → use ca
 ### 3. Run Tests & Checks
 
 ```bash
-fvm flutter format .
+fvm dart format .
 fvm flutter analyze
 fvm flutter test
 ```
@@ -98,141 +101,149 @@ core/lib/
 
 ## Common Patterns
 
+These are the actual patterns from `home_repository_impl.dart` and
+`home_cubit.dart` — not `Either`/dartz, which this project doesn't depend on.
+
 ### Error Handling (Type-Safe)
 
 ```dart
-// Use case returns Either<Failure, T> — no exceptions
-Future<Either<Failure, Post>> getPost(String id) async {
+// Use case/repository returns Result<T> = (T?, AppFailure?) — a record, no exceptions
+Future<Result<HomeEntity>> getHomeData() async {
   try {
-    final post = await remoteDataSource.getPost(id);
-    return Right(post);  // Success
-  } catch (e) {
-    return Left(ServerFailure());  // Failure
+    final data = await remoteDatasource.getHomeData();
+    return (data.toEntity(), null);
+  } on DioException catch (e) {
+    return (null, NetworkFailure(message: e.message ?? 'Network error'));
   }
 }
 
 // Cubit consumes it
-result.fold(
-  (failure) => emit(HomeError(failure.message)),
-  (post) => emit(HomeSuccess(post)),
-);
+final (data, error) = await _getHomeDataUseCase();
+if (data != null) {
+  emit(HomeLoaded(home: data, lastRefresh: DateTime.now()));
+} else if (error != null) {
+  emit(HomeError(message: error.message));
+}
 ```
 
-### State Management (BLoC)
+### State Management (Cubit — the real feature has no event classes)
 
 ```dart
-class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  final GetPostsUseCase getPosts;
-  
-  HomeBloc(this.getPosts) : super(HomeInitial()) {
-    on<LoadPostsEvent>(_onLoad);
-  }
-  
-  Future<void> _onLoad(LoadPostsEvent _, Emitter<HomeState> emit) async {
-    emit(HomeLoading());
-    final result = await getPosts(NoParams());
-    result.fold(
-      (failure) => emit(HomeFailure(failure.message)),
-      (posts) => emit(HomeSuccess(posts)),
-    );
+@injectable
+class HomeCubit extends Cubit<HomeState> {
+  HomeCubit({required GetHomeDataUseCase getHomeDataUseCase})
+    : _getHomeDataUseCase = getHomeDataUseCase,
+      super(const HomeInitial());
+
+  final GetHomeDataUseCase _getHomeDataUseCase;
+
+  Future<void> fetchHomeData() async {
+    emit(const HomeLoading());
+    final (data, error) = await _getHomeDataUseCase();
+    if (data != null) {
+      emit(HomeLoaded(home: data, lastRefresh: DateTime.now()));
+    } else if (error != null) {
+      emit(HomeError(message: error.message, canRetry: true));
+    }
   }
 }
 ```
 
 ### Dependency Injection
 
+Each package (`core`, `domain`, `data`, and the app's own `lib/`) generates
+its **own** DI config from its own `@InjectableInit()` entry point; they're
+composed together in `lib/src/injection/di.dart`. See
+[CLAUDE.md](./CLAUDE.md#4-dependency-injection-setup) for why that matters
+and how to rebuild after adding a new `@injectable` class.
+
 ```dart
-// Register once in di.config.dart
-@injectable
-class PostRepository extends PostRepositoryImpl { ... }
+@LazySingleton(as: HomeRepository)
+class HomeRepositoryImpl implements HomeRepository { ... }  // data/lib/
 
 @injectable
-GetPostsUseCase getPostsUseCase(PostRepository repo) =>
-  GetPostsUseCase(repo);
+class GetHomeDataUseCase { ... }                            // domain/lib/
 
-// Use anywhere
-final useCase = getIt<GetPostsUseCase>();
+// Use anywhere once its package has been rebuilt with build_runner
+final useCase = getIt<GetHomeDataUseCase>();
 ```
 
-## 🏆 Quality Score: 85/100
+## Status
 
-Production-ready. All tests passing, zero lint issues, clean architecture enforced.
-
-| Category | Score | Status |
-|----------|-------|--------|
-| Architecture | 5/5 | ✅ Clean, feature-isolated, sealed classes, error handling |
-| State Management | 4/4 | ✅ BLoC, Cubit, DI auto-wired, SimpleBlocObserver |
-| Networking | 4/4 | ✅ Dio + interceptors, error mapping, caching strategy |
-| Routing | 2/2 | ✅ go_router with error handling, route observers |
-| Code Quality | 5/5 | ✅ **Zero lint warnings**, format clean |
-| Testing | 3/5 | ✅ 30/30 tests passing, basic coverage (aim for 70%+) |
-| **Ops & Config** | 1/1 | ✅ App flavors (dev/staging/prod) implemented |
-
-### Test Suite Status
-
-**30 tests passing** ✅ — No failures, clean runs:
-- ✅ Domain layer: Use cases (6 tests), entities (12 tests)
-- ✅ Data layer: Models (12 tests)
-- ✅ Presentation: Widget structure (1 test)
-
-**Coverage:** Basic unit test coverage in place. Expand as needed:
-- Add core utility tests (network, storage, DI) for 70%+
-- Add cubit/BLoC integration tests
-- Add navigation guard tests
-
-## Current Status
-
-**All checks passing** ✅
+Verified as of this writing — re-run these yourself rather than trusting
+a static badge:
 ```bash
 fvm flutter analyze     # No issues found
-fvm flutter test        # 30/30 passing
-fvm flutter format .    # Already clean
+fvm flutter test        # 33/33 passing
+fvm dart format .       # Already clean
 ```
 
-### What's Ready
+**33 tests**, all in `domain`/`data`/`core` — none in `lib/` (presentation):
+- Domain: use cases (6), entities (12)
+- Data: models (12)
+- Core: error boundary (2 — build-time error → fallback screen, and
+  no-error passthrough)
+- `test/widget_test.dart`: 1 placeholder (`expect(true, true)`), not a
+  real assertion
 
-- ✅ Clean Architecture enforced (domain/data/presentation separated)
-- ✅ BLoC state management with Cubit examples
-- ✅ Dio networking with interceptors & error handling
-- ✅ go_router navigation with auth guards & error handling
-- ✅ GetIt dependency injection (auto-wired via injectable)
-- ✅ Hive + SharedPreferences local storage
+### What's actually wired up
+- ✅ Clean Architecture layers (domain/data/presentation), one real
+  feature (Home) built out end-to-end
+- ✅ Cubit state management (`HomeCubit`), DI resolves it correctly
+  (fixed — see [Known Limitations](#known-limitations) for the bug this
+  used to have)
+- ✅ Dio networking with interceptors, `Result<T>`-based error mapping
+- ✅ go_router navigation with a custom error page and route observer
+- ✅ Hive CE + SharedPreferences local storage
 - ✅ App flavors (dev/staging/prod)
-- ✅ 30 comprehensive unit tests
+- ✅ Error boundary that survives build-time errors without crashing
+  itself (fixed — previously it crashed on its own error path; see below)
 
-### Next Steps (Optional Enhancements)
+### Known Limitations
+- **No CI.** Nothing enforces `analyze`/`test`/`format` on a PR; see
+  [Advanced Patterns → CI/CD](#cicd-pipeline-github-actions) for a
+  starting workflow.
+- **Circular package dependency.** `core` path-depends on `data` and
+  `domain`, which path-depend back on `core`. Works today by luck (no
+  actual import cycle), but is fragile — see `CLAUDE.md`'s "Avoid These
+  Patterns" section.
+- **`go_router`'s `isLoggedIn`/`redirectLocation` params are accepted but
+  unused** — `AppRouter.getRouter()` takes them and does nothing with
+  them. There's no actual auth-guard redirect logic despite what earlier
+  versions of this README claimed.
+- **Single feature.** The "add features without touching existing code"
+  architecture claim is unverified beyond n=1 — Home is the only feature
+  that exists.
+- **Test coverage stops at domain/data.** No cubit, repository, or widget
+  tests. `bloc_test` isn't a dependency (it conflicted with `bloc` 7.x;
+  that's no longer true now that `bloc` is 9.x, so adding it is
+  unblocked, just not done).
+- Two real runtime bugs were found and fixed while auditing this
+  template: `HomeCubit`/`HomeRepositoryImpl`/the use cases were never
+  registered with GetIt (the app crashed opening its one screen), and
+  `ErrorBoundary` crashed on its own error-handling path. Both are fixed
+  and covered by tests now, but it's a sign this hadn't been exercised
+  end-to-end before.
 
-**Expand test coverage** (target 70%+):
-```bash
-# Add core utility tests
-# Add cubit/BLoC integration tests
-# Add navigation guard tests
-# Estimate: 20-30 additional tests
+## Advanced Patterns
 
-fvm flutter test --coverage  # Monitor progress
-```
-
-**Before shipping to production:**
-```bash
-fvm flutter format .
-fvm flutter analyze
-fvm flutter test
-```
-
-## Advanced Patterns (Coming Soon)
-
-### API + Local Cache Strategy
+### API + Local Cache Strategy (already implemented, not a "coming soon")
+Real code from `data/lib/feature_home/repositories/home_repository_impl.dart`
+— try the network, fall back to the Hive cache on a `DioException`:
 ```dart
-// Data layer: try remote, fallback to local
-Future<Either<Failure, List<Post>>> getPosts() async {
+Future<Result<HomeEntity>> getHomeData() async {
   try {
-    final posts = await remoteDataSource.getPosts();
-    await localStorage.savePosts(posts);  // Update cache
-    return Right(posts);
-  } catch (e) {
-    final cached = await localStorage.getPosts();
-    if (cached.isNotEmpty) return Right(cached);
-    return Left(ServerFailure());
+    final response = await _remoteDatasource.getHomeData();
+    final homeModel = HomeModel(/* ...map response fields... */);
+    await _cacheBox.put(_cacheKey, jsonEncode(homeModel.toJson()));
+    return (homeModel.toEntity(), null);
+  } on DioException catch (e) {
+    final cachedJson = _cacheBox.get(_cacheKey);
+    if (cachedJson != null) {
+      final cached = HomeModel.fromJson(jsonDecode(cachedJson) as Map<String, dynamic>);
+      return (cached.toEntity(), null);
+    }
+    return (null, NetworkFailure(message: e.message ?? 'Network error'));
   }
 }
 ```
@@ -265,16 +276,16 @@ fvm flutter pub add hydrated_bloc
 ```
 
 ```dart
-class HomeBloc extends HydratedBloc<HomeEvent, HomeState> {
-  HomeBloc() : super(HomeInitial());
-  
+// hydrated_bloc has a HydratedCubit variant too, matching this project's
+// Cubit-based style — not shown as installed/tested here, just a pointer.
+class HomeCubit extends HydratedCubit<HomeState> {
+  HomeCubit() : super(const HomeInitial());
+
   @override
-  HomeState? fromJson(Map<String, dynamic> json) =>
-    HomeSuccess.fromJson(json);
-  
+  HomeState? fromJson(Map<String, dynamic> json) => HomeState.fromJson(json);
+
   @override
-  Map<String, dynamic>? toJson(HomeState state) =>
-    state.toJson();  // Persists across app restarts
+  Map<String, dynamic>? toJson(HomeState state) => state.toJson();
 }
 ```
 
@@ -295,7 +306,7 @@ jobs:
         with:
           flutter-version: '3.41.8'
       - run: fvm flutter pub get
-      - run: fvm flutter format --set-exit-if-changed .
+      - run: fvm dart format --output=none --set-exit-if-changed .
       - run: fvm flutter analyze
       - run: fvm flutter test
       - run: fvm flutter build apk --release
@@ -336,28 +347,32 @@ fvm flutter build apk --release        # Standalone APK
 ## Getting Started
 
 **Use right now:**
-- ✅ Clone & run `fvm flutter pub get`
-- ✅ All checks pass, ready for development
-- ✅ App flavors preconfigured: `fvm flutter run -t lib/main_dev.dart` (dev/staging/prod)
-- ✅ Clean Architecture enforced — add features without breaking existing code
+- Clone & run `fvm flutter pub get`
+- `analyze`/`test`/`format` all pass as of this writing (re-verify yourself)
+- App flavors preconfigured: `fvm flutter run -t lib/main_dev.dart` (dev/staging/prod)
 
 **Add your first feature:**
-- Read [CLAUDE.md](./CLAUDE.md) for complete patterns (entity → repository → use case → BLoC → page)
+- Read [CLAUDE.md](./CLAUDE.md) for the real patterns (entity → repository
+  → use case → Cubit → page), including the DI gotcha in
+  ["Dependency Injection Setup"](./CLAUDE.md#4-dependency-injection-setup)
 - Use `create-feature` skill to scaffold feature structure (if available)
 - Run tests after each feature: `fvm flutter test`
+- This will be the first feature *besides* Home — the "add features
+  without touching existing code" claim hasn't been exercised yet
 
 **Before shipping:**
-- Expand test coverage to 70%+ with `fvm flutter test --coverage`
-- Add core utility tests (network, storage, DI)
-- Add cubit/BLoC integration tests
-- Set up CI/CD with GitHub Actions (see Advanced Patterns section)
-- Enable state persistence with `hydrated_bloc` if needed (optional)
+- Add cubit/repository/widget tests — currently only domain/data have any
+- Set up CI/CD with GitHub Actions (see [Advanced Patterns](#advanced-patterns) — there isn't one yet)
+- Resolve the `core`↔`data`↔`domain` circular path dependency (see
+  [Known Limitations](#known-limitations))
+- Wire up or remove `AppRouter`'s unused `isLoggedIn`/`redirectLocation` params
+- Enable state persistence with `hydrated_bloc` if needed (optional, untested here)
 
 ## Requirements
 
 - **Flutter:** 3.41.8 (pinned in `.fvmrc`, managed by FVM)
-- **Dart:** 3.4.8+ (included with Flutter)
-- **FVM:** 2.4.0+ (https://fvm.app)
+- **Dart:** 3.11.5 (bundled with that Flutter version — not independently installed)
+- **FVM:** 4.x (tested with 4.1.2; https://fvm.app)
 - **IDE:** VS Code or Android Studio recommended
 
 ### Install Dependencies
@@ -385,13 +400,17 @@ See https://fvm.app/docs/getting-started/installation
 
 ## What Makes This Different?
 
-**vs Firebase Boilerplate:** This includes Firebase integration options but focuses on *architecture* over marketing. No vendor lock-in.
+**vs GetX/Provider:** BLoC/Cubit scales better for complex apps and is
+more testable — a matter of preference, not a settled fact.
 
-**vs GetX/Provider:** BLoC scales better for complex apps. More predictable, testable, industry-standard.
+**vs Copy-Paste Examples:** The Home feature is real, working code you
+can read end-to-end across all four packages, not an isolated snippet.
+That said, treat it as a worked example to learn from and adapt, not as
+battle-tested production code — see [Known Limitations](#known-limitations).
 
-**vs Copy-Paste Examples:** Every pattern shown here is production-tested. Not tutorials—ready-to-use code.
-
-**vs DIY Architecture:** 50+ hours of decisions already made. Feature structure, error handling, testing setup all figured out.
+**vs DIY Architecture:** The layer boundaries, DI composition, and error
+type hierarchy are already decided and demonstrated once. You still need
+to build out testing and CI yourself.
 
 ## Contributing
 
@@ -399,7 +418,7 @@ Found a bug? Missing pattern? PRs welcome.
 
 **Before submitting:**
 ```bash
-fvm flutter format .
+fvm dart format .
 fvm flutter analyze
 fvm flutter test
 ```
