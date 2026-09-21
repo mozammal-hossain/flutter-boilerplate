@@ -111,7 +111,7 @@ class TestData {
         'thumbnailUrl': 'https://example.com/thumb.jpg',
         'category': 'test',
         'isFeatured': true,
-      }
+      },
     ],
     'totalCount': 1,
     'lastUpdated': tNow.toIso8601String(),
