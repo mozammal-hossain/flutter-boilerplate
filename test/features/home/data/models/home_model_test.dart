@@ -55,16 +55,8 @@ void main() {
     });
 
     test('equality works with same values', () {
-      const model1 = HomeItemModel(
-        id: '1',
-        title: 'Item',
-        rank: 1,
-      );
-      const model2 = HomeItemModel(
-        id: '1',
-        title: 'Item',
-        rank: 1,
-      );
+      const model1 = HomeItemModel(id: '1', title: 'Item', rank: 1);
+      const model2 = HomeItemModel(id: '1', title: 'Item', rank: 1);
 
       expect(model1, model2);
     });
@@ -77,13 +69,7 @@ void main() {
       title: 'Test Home',
       subtitle: 'Test Subtitle',
       imageUrl: 'https://example.com/image.jpg',
-      items: const [
-        HomeItemModel(
-          id: '1',
-          title: 'Test Item',
-          rank: 1,
-        ),
-      ],
+      items: const [HomeItemModel(id: '1', title: 'Test Item', rank: 1)],
       totalCount: 1,
       lastUpdated: tNow.toIso8601String(),
     );
@@ -95,11 +81,7 @@ void main() {
         'subtitle': 'Test Subtitle',
         'imageUrl': 'https://example.com/image.jpg',
         'items': [
-          <String, dynamic>{
-            'id': '1',
-            'title': 'Test Item',
-            'rank': 1,
-          }
+          <String, dynamic>{'id': '1', 'title': 'Test Item', 'rank': 1},
         ],
         'totalCount': 1,
         'lastUpdated': tNow.toIso8601String(),

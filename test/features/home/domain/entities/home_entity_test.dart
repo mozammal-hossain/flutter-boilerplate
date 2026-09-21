@@ -107,7 +107,7 @@ void main() {
             'thumbnailUrl': 'https://example.com/thumb.jpg',
             'category': 'test',
             'isFeatured': true,
-          }
+          },
         ],
         'totalCount': 1,
         'lastUpdated': tNow.toIso8601String(),
@@ -124,18 +124,9 @@ void main() {
     });
 
     test('toString returns formatted string', () {
-      expect(
-        tHomeEntity.toString(),
-        contains('HomeEntity'),
-      );
-      expect(
-        tHomeEntity.toString(),
-        contains('id: 1'),
-      );
-      expect(
-        tHomeEntity.toString(),
-        contains('title: Test Home'),
-      );
+      expect(tHomeEntity.toString(), contains('HomeEntity'));
+      expect(tHomeEntity.toString(), contains('id: 1'));
+      expect(tHomeEntity.toString(), contains('title: Test Home'));
     });
 
     test('hashCode is consistent for equal objects', () {
@@ -160,16 +151,8 @@ void main() {
 
   group('HomeItemEntity', () {
     test('equality based on props', () {
-      const item1 = HomeItemEntity(
-        id: '1',
-        title: 'Item 1',
-        rank: 1,
-      );
-      const item2 = HomeItemEntity(
-        id: '1',
-        title: 'Item 1',
-        rank: 1,
-      );
+      const item1 = HomeItemEntity(id: '1', title: 'Item 1', rank: 1);
+      const item2 = HomeItemEntity(id: '1', title: 'Item 1', rank: 1);
 
       expect(item1, item2);
     });
