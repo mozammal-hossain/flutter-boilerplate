@@ -198,15 +198,15 @@ fvm dart format .       # Already clean
 - ✅ App flavors (dev/staging/prod)
 - ✅ Error boundary that survives build-time errors without crashing
   itself (fixed — previously it crashed on its own error path; see below)
+- ✅ Clean package dependency graph: `domain → core`, `data → domain, core`,
+  `core → (nothing)` — fixed, previously `core` circularly path-depended
+  on `data`/`domain` too (see `CLAUDE.md`'s "Avoid These Patterns" section
+  for what caused it and how it was fixed)
 
 ### Known Limitations
 - **No CI.** Nothing enforces `analyze`/`test`/`format` on a PR; see
   [Advanced Patterns → CI/CD](#cicd-pipeline-github-actions) for a
   starting workflow.
-- **Circular package dependency.** `core` path-depends on `data` and
-  `domain`, which path-depend back on `core`. Works today by luck (no
-  actual import cycle), but is fragile — see `CLAUDE.md`'s "Avoid These
-  Patterns" section.
 - **`go_router`'s `isLoggedIn`/`redirectLocation` params are accepted but
   unused** — `AppRouter.getRouter()` takes them and does nothing with
   them. There's no actual auth-guard redirect logic despite what earlier
@@ -363,8 +363,6 @@ fvm flutter build apk --release        # Standalone APK
 **Before shipping:**
 - Add cubit/repository/widget tests — currently only domain/data have any
 - Set up CI/CD with GitHub Actions (see [Advanced Patterns](#advanced-patterns) — there isn't one yet)
-- Resolve the `core`↔`data`↔`domain` circular path dependency (see
-  [Known Limitations](#known-limitations))
 - Wire up or remove `AppRouter`'s unused `isLoggedIn`/`redirectLocation` params
 - Enable state persistence with `hydrated_bloc` if needed (optional, untested here)
 
