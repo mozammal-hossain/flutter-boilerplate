@@ -8,15 +8,17 @@ class LoggingInterceptor extends Interceptor {
     Logger? logger,
     this.logRequestBody = true,
     this.logResponseBody = true,
-  }) : logger = logger ?? Logger(
-          level: Level.debug,
-          printer: PrettyPrinter(
-            methodCount: 0,
-            errorMethodCount: 5,
-            lineLength: 80,
-            printEmojis: false,
-          ),
-        );
+  }) : logger =
+           logger ??
+           Logger(
+             level: Level.debug,
+             printer: PrettyPrinter(
+               methodCount: 0,
+               errorMethodCount: 5,
+               lineLength: 80,
+               printEmojis: false,
+             ),
+           );
 
   /// Logger instance
   final Logger logger;
@@ -27,12 +29,8 @@ class LoggingInterceptor extends Interceptor {
   /// Whether to log response bodies
   final bool logResponseBody;
 
-
   @override
-  void onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) {
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     final buffer = StringBuffer()
       ..writeln('→ ${options.method.toUpperCase()} ${options.uri}')
       ..writeln('  Headers: ${options.headers}')
@@ -78,7 +76,7 @@ class LoggingInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioError err, ErrorInterceptorHandler handler) {
+  void onError(DioException err, ErrorInterceptorHandler handler) {
     final buffer = StringBuffer()
       ..writeln('✗ Error: ${err.message}')
       ..writeln('  Type: ${err.type}')
@@ -94,7 +92,7 @@ class LoggingInterceptor extends Interceptor {
         ..writeln('  Response: ${err.response?.data}');
     }
 
-    logger.e(buffer.toString(), err, err.stackTrace);
+    logger.e(buffer.toString(), error: err, stackTrace: err.stackTrace);
     handler.next(err);
   }
 }

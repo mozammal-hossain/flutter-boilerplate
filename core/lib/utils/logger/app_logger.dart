@@ -13,7 +13,6 @@ class AppLogger {
   /// Whether logging is enabled
   static bool _isEnabled = true;
 
-
   /// Initializes the logger with custom configuration
   static void init({
     Level level = Level.debug,
@@ -21,7 +20,8 @@ class AppLogger {
     Logger? customLogger,
   }) {
     _isEnabled = enable;
-    _logger = customLogger ??
+    _logger =
+        customLogger ??
         Logger(
           level: level,
           printer: PrettyPrinter(
@@ -36,42 +36,42 @@ class AppLogger {
   /// Logs a verbose message
   static void v(dynamic message, [dynamic error, StackTrace? stackTrace]) {
     if (_isEnabled) {
-      _logger.v(message, error, stackTrace);
+      _logger.t(message, error: error, stackTrace: stackTrace);
     }
   }
 
   /// Logs a debug message
   static void d(dynamic message, [dynamic error, StackTrace? stackTrace]) {
     if (_isEnabled) {
-      _logger.d(message, error, stackTrace);
+      _logger.d(message, error: error, stackTrace: stackTrace);
     }
   }
 
   /// Logs an info message
   static void i(dynamic message, [dynamic error, StackTrace? stackTrace]) {
     if (_isEnabled) {
-      _logger.i(message, error, stackTrace);
+      _logger.i(message, error: error, stackTrace: stackTrace);
     }
   }
 
   /// Logs a warning message
   static void w(dynamic message, [dynamic error, StackTrace? stackTrace]) {
     if (_isEnabled) {
-      _logger.w(message, error, stackTrace);
+      _logger.w(message, error: error, stackTrace: stackTrace);
     }
   }
 
   /// Logs an error message
   static void e(dynamic message, [dynamic error, StackTrace? stackTrace]) {
     if (_isEnabled) {
-      _logger.e(message, error, stackTrace);
+      _logger.e(message, error: error, stackTrace: stackTrace);
     }
   }
 
   /// Logs a wtf (What a Terrible Failure) message
   static void wtf(dynamic message, [dynamic error, StackTrace? stackTrace]) {
     if (_isEnabled) {
-      _logger.wtf(message, error, stackTrace);
+      _logger.f(message, error: error, stackTrace: stackTrace);
     }
   }
 

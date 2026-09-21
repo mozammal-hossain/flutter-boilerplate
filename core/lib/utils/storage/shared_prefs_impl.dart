@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Implementation of [LocalStorage] using SharedPreferences
 @LazySingleton(as: LocalStorage)
 class SharedPrefsImpl implements LocalStorage {
-
   /// Creates a [SharedPrefsImpl] instance
   const SharedPrefsImpl(this._prefs);
   final SharedPreferences _prefs;

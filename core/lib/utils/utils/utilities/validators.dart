@@ -6,9 +6,7 @@ class Validators {
   /// Validates an email address
   static bool isValidEmail(String email) {
     if (email.isEmpty) return false;
-    final emailRegex = RegExp(
-      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-    );
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     return emailRegex.hasMatch(email);
   }
 

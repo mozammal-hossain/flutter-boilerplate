@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_boilerplate_core/flutter_boilerplate_core.dart';
 import 'package:flutter_boilerplate_data/feature_home/datasources/home_remote_datasource.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive_ce_flutter/hive_ce_flutter.dart';
 import 'package:injectable/injectable.dart';
 import 'package:logger/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,14 +16,14 @@ abstract class DIModule {
   /// Dio client configuration
   @lazySingleton
   Logger get logger => Logger(
-        level: Level.debug,
-        printer: PrettyPrinter(
-          methodCount: 0,
-          errorMethodCount: 5,
-          lineLength: 80,
-          printEmojis: false,
-        ),
-      );
+    level: Level.debug,
+    printer: PrettyPrinter(
+      methodCount: 0,
+      errorMethodCount: 5,
+      lineLength: 80,
+      printEmojis: false,
+    ),
+  );
 
   /// Shared Preferences instance
   @preResolve
@@ -43,6 +43,5 @@ abstract class DIModule {
   HomeRemoteDatasource getHomeRemoteDatasource(
     Dio dio,
     @Named('baseUrl') String baseUrl,
-  ) =>
-      HomeRemoteDatasource(dio, baseUrl: baseUrl);
+  ) => HomeRemoteDatasource(dio, baseUrl: baseUrl);
 }

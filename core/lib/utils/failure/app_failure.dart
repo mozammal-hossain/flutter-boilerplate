@@ -42,31 +42,28 @@ class NetworkFailure extends AppFailure {
 
   @override
   Map<String, dynamic> toJson() => {
-        'code': code,
-        'message': message,
-        'statusCode': statusCode,
-        'responseBody': responseBody,
-      };
+    'code': code,
+    'message': message,
+    'statusCode': statusCode,
+    'responseBody': responseBody,
+  };
 }
 
 /// Failure that occurs during local storage operations
 class CacheFailure extends AppFailure {
   /// Creates a CacheFailure
-  const CacheFailure({
-    required super.message,
-    this.key,
-    super.stackTrace,
-  }) : super(code: 'CACHE_FAILURE');
+  const CacheFailure({required super.message, this.key, super.stackTrace})
+    : super(code: 'CACHE_FAILURE');
 
   /// Key that caused the failure
   final String? key;
 
   @override
   Map<String, dynamic> toJson() => {
-        'code': code,
-        'message': message,
-        'key': key,
-      };
+    'code': code,
+    'message': message,
+    'key': key,
+  };
 }
 
 /// Failure for validation errors
@@ -77,8 +74,8 @@ class ValidationFailure extends AppFailure {
     this.field,
     List<String>? errors,
     super.stackTrace,
-  })  : errors = errors ?? const [],
-        super(code: 'VALIDATION_FAILURE');
+  }) : errors = errors ?? const [],
+       super(code: 'VALIDATION_FAILURE');
 
   /// Field that failed validation
   final String? field;
@@ -88,11 +85,11 @@ class ValidationFailure extends AppFailure {
 
   @override
   Map<String, dynamic> toJson() => {
-        'code': code,
-        'message': message,
-        'field': field,
-        'errors': errors,
-      };
+    'code': code,
+    'message': message,
+    'field': field,
+    'errors': errors,
+  };
 }
 
 /// Failure for authentication/authorization errors
@@ -109,10 +106,10 @@ class AuthFailure extends AppFailure {
 
   @override
   Map<String, dynamic> toJson() => {
-        'code': code,
-        'message': message,
-        'canRefresh': canRefresh,
-      };
+    'code': code,
+    'message': message,
+    'canRefresh': canRefresh,
+  };
 }
 
 /// Unknown/unexpected failure
@@ -129,8 +126,8 @@ class UnknownFailure extends AppFailure {
 
   @override
   Map<String, dynamic> toJson() => {
-        'code': code,
-        'message': message,
-        'exception': exception?.toString(),
-      };
+    'code': code,
+    'message': message,
+    'exception': exception?.toString(),
+  };
 }
