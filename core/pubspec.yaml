@@ -16,10 +16,6 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_bloc: ^9.1.1
-  flutter_boilerplate_data:
-    path: ../data
-  flutter_boilerplate_domain:
-    path: ../domain
   flutter_screenutil: ^5.9.0
   get_it: ^9.3.0
   hive_ce: ^2.20.0
