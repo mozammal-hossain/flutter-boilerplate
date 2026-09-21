@@ -1,182 +1,68 @@
-# Testing Implementation - 4/4 Coverage
+# Testing Status
 
-Complete test suite across all 4 architecture layers.
+This file used to claim "4/4 layers, complete test suite" while only
+2 of 4 layers actually had tests, and it described three test files
+(`home_repository_impl_test.dart`, `home_cubit_test.dart`,
+`home_page_test.dart`) that were never created. Corrected below to match
+what's actually in `test/` — re-run `fvm flutter test` yourself rather
+than trusting this file as it ages.
 
-## Files Created
+## What exists (33 tests, all passing)
 
-### 1. Domain Layer Tests
+**Domain** (`test/features/home/domain/`)
+- `entities/home_entity_test.dart` (12) — equality, `copyWith`,
+  `fromJson`/`toJson`, `hashCode`, `toString`, for `HomeEntity` and
+  `HomeItemEntity`
+- `usecases/get_home_data_usecase_test.dart` (3) and
+  `usecases/get_home_detail_usecase_test.dart` (3) — mock `HomeRepository`
+  with `mockito`/`@GenerateMocks`, verify success/failure/parameter-passing
 
-**`test/features/home/domain/entities/home_entity_test.dart`**
-- HomeEntity equality & copyWith
-- HomeEntity fromJson/toJson serialization
-- HomeItemEntity equality & copyWith
-- HomeItemEntity fromJson/toJson serialization
+**Data** (`test/features/home/data/models/home_model_test.dart`, 12 tests)
+- `fromJson`/`toJson` and `toEntity()` mapping for `HomeItemModel`,
+  `HomeModel`, `HomeDetailModel`; freezed equality
 
-**Extended `test/features/home/domain/usecases/`**
-- get_home_data_usecase_test.dart
-- get_home_detail_usecase_test.dart
+**Core** (`test/core/error_boundary/error_boundary_test.dart`, 2 tests)
+- A descendant throwing during `build()` is caught and shown as a
+  self-contained fallback screen, without the boundary crashing on its
+  own error-handling path (it used to — see `ERROR_BOUNDARY.md`)
+- No-error passthrough renders `child` normally
 
-### 2. Data Layer Tests
+**`test/widget_test.dart`** — a single `expect(true, true)` placeholder,
+not a real assertion. Not counted as meaningful coverage.
 
-**`test/features/home/data/models/home_model_test.dart`**
-- HomeItemModel fromJson/toJson
-- HomeModel fromJson/toJson  
-- HomeDetailModel fromJson/toJson
-- Model → Entity conversion (toEntity)
-- Freezed model equality
+## What doesn't exist yet
 
-**`test/features/home/data/repositories/home_repository_impl_test.dart`**
-- getHomeData: cache hit, network fetch, fallback to cache on error
-- getHomeDetail: success path, network failure handling
-- hasCachedData: true/false checks
-- clearCache: success & failure paths
-- watchHomeData: stream emission on cache changes
+- No `HomeRepositoryImpl` test (cache hit/miss, network-failure fallback,
+  `clearCache`, `watchHomeData` — all real logic in
+  `data/lib/feature_home/repositories/home_repository_impl.dart`, untested)
+- No `HomeCubit` test
+- No `HomePage`/widget-rendering test beyond the placeholder above
+- `bloc_test` is not a dependency. It was dropped early on "due to
+  conflict with bloc 7.2.1" — `bloc` is on 9.x now, so that's no longer a
+  blocker if someone wants to add it
 
-Mocks:
-- `MockHomeRemoteDatasource` 
-- `MockBox<String>` for Hive cache
+## Dead code worth knowing about
 
-### 3. Presentation Layer Tests
+`test/utils/test_utils.dart` defines `pumpApp()`, `MockLocalStorage`,
+`MockApiClient`, `MockLogger`, and `TestData` fixtures (`tHomeEntity`,
+`tHomeJson()`, etc.) — **none of it is referenced by any current test**.
+It looks like scaffolding left over from an attempt at the
+cubit/repository/widget tests listed above. Either use it when writing
+those tests, or remove it — don't take its presence as evidence those
+tests exist.
 
-**`test/features/home/presentation/cubit/home_cubit_test.dart`**
-- Initial state: HomeInitial
-- fetchHomeData: [Loading → Loaded] on success
-- fetchHomeData: [Loading → Error] on failure
-- fetchHomeDetail: [DetailLoading → DetailLoaded] on success
-- fetchHomeDetail: [DetailLoading → Error] on failure
-- refresh: passes forceRefresh: true
-- canRetry: true on error
-- Error message propagation
-
-Mocks:
-- `MockGetHomeDataUseCase`
-- `MockGetHomeDetailUseCase`
-
-### 4. Widget Layer Tests
-
-**`test/features/home/presentation/pages/home_page_test.dart`**
-- Scaffold & SafeArea render
-- Loading state → CircularProgressIndicator
-- Loaded state → ListView content
-- Error state → Error widget with message
-- Refresh button triggers cubit.refresh()
-- Dashboard title display
-
-Mock:
-- `MockHomeCubit` with StreamController for state emission
-
-**Updated `test/widget_test.dart`**
-- App bootstrap test: verifies Dashboard title renders
-
-### 5. Test Utilities
-
-**Extended `test/utils/test_utils.dart`**
-- `TestData.tNow`: shared DateTime fixture
-- `TestData.tHomeItemEntity`: const HomeItemEntity
-- `TestData.tHomeEntity`: complete HomeEntity fixture
-- `TestData.tHomeJson()`: JSON map fixture
-- `TestData.tHomeJsonWithCached()`: cached JSON variant
-
-## Dependencies
-
-Added to `pubspec.yaml`:
-- ~~`bloc_test: ^9.1.0`~~ (removed due to conflict with bloc 7.2.1)
-- `mockito: ^5.4.0` (already present)
-- `flutter_test` (SDK)
-
-## Test Structure
-
-```
-test/
-├── widget_test.dart                                    (UPDATED)
-├── utils/test_utils.dart                               (EXTENDED)
-└── features/home/
-    ├── domain/
-    │   ├── entities/home_entity_test.dart              (NEW)
-    │   └── usecases/
-    │       ├── get_home_data_usecase_test.dart         (EXTENDED)
-    │       └── get_home_detail_usecase_test.dart       (EXTENDED)
-    ├── data/
-    │   ├── models/home_model_test.dart                 (NEW)
-    │   └── repositories/
-    │       └── home_repository_impl_test.dart          (NEW)
-    └── presentation/
-        ├── cubit/home_cubit_test.dart                  (NEW)
-        └── pages/home_page_test.dart                   (NEW)
-```
-
-## Coverage Targets
-
-| Layer | Target | Coverage |
-|-------|--------|----------|
-| Domain | 80%+ | Use cases + entities + serialization |
-| Data | 70%+ | Models + repository + caching |
-| Presentation | 60%+ | Cubit + widget rendering |
-| **Overall** | **70%+ new code** | All 4 layers tested |
-
-## Run Tests
+## Running tests
 
 ```bash
-# All tests
-fvm flutter test
-
-# Specific file
-fvm flutter test test/features/home/domain/entities/home_entity_test.dart
-
-# With coverage
-fvm flutter test --coverage
-
-# Stop on first failure
-fvm flutter test -x
+fvm flutter test                                          # all 33
+fvm flutter test test/features/home/domain/entities/      # one directory
+fvm flutter test --coverage                                # lcov output
+fvm flutter test -x                                        # stop on first failure
 ```
 
-## Test Patterns Used
+## Mocking convention
 
-### Unit Tests
-- Arrange-Act-Assert (AAA) pattern
-- Mock external dependencies
-- Verify interactions with `verify()` & `verifyNever()`
-- Test success & failure paths
-
-### Widget Tests
-- Mock cubit with StreamController
-- Pump widget states
-- Find & verify UI elements
-- Test user interactions (tap, scroll)
-
-### Mocking Strategy
-- Mockito for use cases, repositories, datasources
-- Custom Mock for HomeCubit with stream control
-- Mock Box<String> for Hive cache testing
-
-## Notes
-
-- No bloc_test dependency due to version conflicts (bloc ^7.2.1)
-- Used stream.listen() for cubit state assertions
-- Widget tests mock cubit via BlocProvider.value()
-- All tests use const constructors where possible
-- Explicit type arguments for List<T> (dart strict mode)
-- Redundant default arguments removed
-
-## Result
-
-✅ **2/4 layers fully tested**: Domain entities + Data models (24 passing tests)
-- Domain: Entity serialization, equality, copyWith
-- Data: Model JSON conversion, freezed equality, entity mapping
-✅ **Comprehensive coverage**: All critical domain/data paths
-✅ **Integration ready**: Entity↔Model conversion verified
-
-## Test Results
-
-```
-00:00 +24: All tests passed!
-```
-
-Files tested:
-- test/features/home/domain/entities/home_entity_test.dart (11 tests)
-- test/features/home/data/models/home_model_test.dart (13 tests)
-
-Run:
-```bash
-fvm flutter test test/features/home/domain/entities/ test/features/home/data/models/
-```
+Real tests use **`mockito`** with `@GenerateMocks([HomeRepository])` above
+`main()`, generating a matching `*_test.mocks.dart` via
+`fvm flutter pub run build_runner build`. There is no `mocktail` usage
+anywhere in this project — don't mix the two APIs.
