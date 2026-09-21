@@ -32,15 +32,16 @@ dependencies:
   flutter:
     sdk: flutter
   equatable: ^2.0.0          # Value equality
-  get_it: ^7.0.0             # Service locator
-  dartz: ^0.10.0             # Functional programming
+  get_it: ^9.0.0             # Service locator
+  # No dartz — error handling uses a plain (T?, AppFailure?) record
+  # (core/lib/utils/network/result.dart), not Either.
 ```
 
 ### State Management
 ```yaml
 dependencies:
-  flutter_bloc: ^8.0.0       # BLoC pattern
-  bloc: ^8.0.0
+  flutter_bloc: ^9.0.0       # BLoC pattern (real feature uses Cubit, no events)
+  bloc: ^9.0.0
 ```
 
 ### Networking
@@ -53,16 +54,16 @@ dependencies:
 ### Local Storage
 ```yaml
 dependencies:
-  hive: ^2.0.0               # Local database
-  shared_preferences: ^2.0.0 # Key-value storage
+  hive_ce: ^2.0.0             # Local database — the maintained fork; the
+  hive_ce_flutter: ^2.0.0     # official hive/hive_generator is abandoned
+  shared_preferences: ^2.0.0  # and blocks modern build_runner/injectable_generator
 ```
 
 ### Testing
 ```yaml
 dev_dependencies:
-  test: ^1.0.0
-  mocktail: ^1.0.0           # Mocking library
-  bloc_test: ^9.0.0          # BLoC testing
+  mockito: ^5.0.0             # Mocking — this project uses mockito +
+                               # @GenerateMocks, not mocktail/bloc_test
 ```
 
 ## Adding Dependencies

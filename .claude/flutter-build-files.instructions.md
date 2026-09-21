@@ -45,17 +45,17 @@ Keep dev dependencies separate and organized:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  
-  # Testing
-  test: ^1.0.0
-  mocktail: ^1.0.0
-  bloc_test: ^9.0.0
-  
+
+  # Testing — this project uses mockito (with @GenerateMocks/build_runner),
+  # not mocktail. bloc_test is not a dependency (was dropped for a bloc
+  # 7.x conflict that no longer applies now that bloc is on 9.x).
+  mockito: ^5.0.0
+
   # Code generation
   build_runner: ^2.0.0
-  
+
   # Linting
-  flutter_lints: ^3.0.0
+  very_good_analysis: ^10.2.0
 ```
 
 ## build.gradle.kts (Android)
@@ -93,7 +93,7 @@ Never change Flutter SDK version here directly:
 3. Run full suite to catch impacts:
    ```bash
    fvm flutter analyze
-   fvm flutter format .
+   fvm dart format .
    fvm flutter test
    ```
 

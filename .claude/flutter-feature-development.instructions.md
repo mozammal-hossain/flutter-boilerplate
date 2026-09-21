@@ -140,23 +140,24 @@ class MyEntity extends Equatable {
 ### Repository Interface
 ```dart
 // domain/repositories/my_feature_repository.dart
+// Result<T> = (T?, AppFailure?), not Either<Failure, T> — this project
+// doesn't depend on dartz. See core/lib/utils/network/result.dart.
 abstract class MyFeatureRepository {
-  Future<Either<Failure, List<MyEntity>>> getMyData();
+  Future<Result<List<MyEntity>>> getMyData();
 }
 ```
 
 ### Use Case
 ```dart
 // domain/usecases/get_my_data_usecase.dart
-class GetMyDataUseCase extends UseCase<List<MyEntity>, NoParams> {
-  final MyFeatureRepository repository;
-  
-  GetMyDataUseCase(this.repository);
-  
-  @override
-  Future<Either<Failure, List<MyEntity>>> call(NoParams params) {
-    return repository.getMyData();
-  }
+// Real use cases here are plain callable classes, not a UseCase<T, Params>
+// base class (there isn't one) — see domain/lib/feature_home/usecases/.
+@injectable
+class GetMyDataUseCase {
+  const GetMyDataUseCase(this._repository);
+  final MyFeatureRepository _repository;
+
+  Future<Result<List<MyEntity>>> call() => _repository.getMyData();
 }
 ```
 
@@ -210,22 +211,27 @@ class MyFeatureRemoteDataSourceImpl implements MyFeatureRemoteDataSource {
 ### Repository Implementation
 ```dart
 // data/repositories/my_feature_repository_impl.dart
+@LazySingleton(as: MyFeatureRepository)
 class MyFeatureRepositoryImpl implements MyFeatureRepository {
-  final MyFeatureRemoteDataSource remoteDataSource;
-  
   MyFeatureRepositoryImpl({required this.remoteDataSource});
-  
+  final MyFeatureRemoteDataSource remoteDataSource;
+
   @override
-  Future<Either<Failure, List<MyEntity>>> getMyData() async {
+  Future<Result<List<MyEntity>>> getMyData() async {
     try {
       final data = await remoteDataSource.getMyData();
-      return Right(data);
-    } catch (e) {
-      return Left(ServerFailure());
+      return (data, null);
+    } on DioException catch (e) {
+      return (null, NetworkFailure(message: e.message ?? 'Network error'));
+    } catch (e, st) {
+      return (null, UnknownFailure(message: '$e', exception: e, stackTrace: st));
     }
   }
 }
 ```
+Note: `AppFailure` has no `ServerFailure` class — use `NetworkFailure`,
+`CacheFailure`, `ValidationFailure`, `AuthFailure`, or `UnknownFailure`
+(`core/lib/utils/failure/app_failure.dart`).
 
 ## UI Layer
 
@@ -299,39 +305,39 @@ void setupMyFeatureInjection() {
 ## Testing
 
 ### Unit Test Example
+Uses `mockito` + `@GenerateMocks` (this project's actual convention — not
+`mocktail`, which doesn't take a closure in `when()`):
 ```dart
 // test/features/my_feature/domain/usecases/get_my_data_usecase_test.dart
+@GenerateMocks([MyFeatureRepository])
 void main() {
-  group('GetMyDataUseCase', () {
-    late MockMyFeatureRepository mockRepository;
-    late GetMyDataUseCase useCase;
-    
-    setUp(() {
-      mockRepository = MockMyFeatureRepository();
-      useCase = GetMyDataUseCase(mockRepository);
-    });
-    
-    test('should get data from repository', () async {
-      // arrange
-      final tData = [const MyEntity(id: '1', name: 'Test')];
-      when(() => mockRepository.getMyData())
-          .thenAnswer((_) async => Right(tData));
-      
-      // act
-      final result = await useCase(NoParams());
-      
-      // assert
-      expect(result, Right(tData));
-      verify(() => mockRepository.getMyData()).called(1);
-    });
+  late MockMyFeatureRepository mockRepository;
+  late GetMyDataUseCase useCase;
+
+  setUp(() {
+    mockRepository = MockMyFeatureRepository();
+    useCase = GetMyDataUseCase(mockRepository);
+  });
+
+  test('should get data from repository', () async {
+    final tData = [const MyEntity(id: '1', name: 'Test')];
+    when(mockRepository.getMyData()).thenAnswer((_) async => (tData, null));
+
+    final (data, error) = await useCase();
+
+    expect(data, tData);
+    expect(error, isNull);
+    verify(mockRepository.getMyData()).called(1);
   });
 }
 ```
+Run `fvm flutter pub run build_runner build` after adding `@GenerateMocks`
+to generate `get_my_data_usecase_test.mocks.dart`.
 
 ## Before Committing
 
 ```bash
-fvm flutter format lib/features/my_feature
+fvm dart format lib/features/my_feature
 fvm flutter analyze
 fvm flutter test
 ```
