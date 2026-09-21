@@ -35,11 +35,7 @@ class ErrorScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: 24.h),
-            Icon(
-              Icons.error_outline,
-              size: 64.w,
-              color: Colors.red.shade700,
-            ),
+            Icon(Icons.error_outline, size: 64.w, color: Colors.red.shade700),
             SizedBox(height: 24.h),
             Text(
               'Oops! Something went wrong',
@@ -51,9 +47,9 @@ class ErrorScreen extends StatelessWidget {
             SizedBox(height: 16.h),
             Text(
               'An unexpected error occurred. Our team has been notified.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.red.shade700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.red.shade700),
             ),
             SizedBox(height: 24.h),
             Container(
@@ -74,9 +70,9 @@ class ErrorScreen extends StatelessWidget {
                   SizedBox(height: 8.h),
                   SelectableText(
                     error,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontFamily: 'monospace',
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
                   ),
                   if (stackTrace != null) ...[
                     SizedBox(height: 16.h),
@@ -90,9 +86,7 @@ class ErrorScreen extends StatelessWidget {
                       children: [
                         SelectableText(
                           stackTrace!,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
+                          style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(fontFamily: 'monospace'),
                         ),
                       ],

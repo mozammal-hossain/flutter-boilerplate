@@ -41,16 +41,17 @@ class MyApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             routerConfig: AppRouter.getRouter(
               isLoggedIn: () async {
-                final (token, _) = await di.getIt<LocalStorage>()
-                    .get<String>('auth_token');
+                final (token, _) = await di.getIt<LocalStorage>().get<String>(
+                  'auth_token',
+                );
                 return token != null && token.isNotEmpty;
               },
             ),
             builder: (context, child) {
               return MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  textScaler: TextScaler.noScaling,
-                ),
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: TextScaler.noScaling),
                 child: child!,
               );
             },
